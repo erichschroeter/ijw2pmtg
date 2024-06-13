@@ -2,6 +2,7 @@ import argparse
 import json
 import logging
 import os
+import re
 import sys
 from .api import Scryfall
 
@@ -67,11 +68,10 @@ class App:
                                  default='info',
                                  help='Set the logging verbosity level.')
         self.parser.add_argument('--server', default='https://api.scryfall.com', help="The Scryfall server URL.")
+        self.parser.add_argument('--dryrun', default=False, help='Dry run network and filesystem operations.', action='store_true')
         self.parser.add_argument('-i', '--input',
-                                 help='A file of card names. Alternatively, a comma-separated list of card names can be provided via stdin.')
-        self.parser.add_argument('-o', '--output',
-                                 default=os.getcwd(),
-                                 help='The output directory.')
+                                 help='A file of card names. Alternatively, a newline-separated list of card names can be provided via stdin.')
+        self.parser.add_argument('-o', '--output', default=os.getcwd(), help='The output directory.')
         self.parser.set_defaults(func=download_cards)
 
     def parse_args(self, args=None):
@@ -85,22 +85,70 @@ class App:
         self.args.func(self.args)
 
 
+class CardParser:
+    def __init__(self, filename):
+        self.cards = []
+        with open(filename, 'r') as file:
+            for line in file:
+                cards_in_line = self.parse_line(line.strip())
+                if cards_in_line:
+                    # Filter out extra info that Manabox includes sometimes
+                    if re.match(r'.+\(.*\)\s+\d*', cards_in_line[0]):
+                        manabox = re.search(r'(?P<card>.+)\((?P<setname>.*)\)\s+(?P<printno>\d+)', cards_in_line[0])
+                        self.cards.extend([manabox.group('card').strip()])
+                    else:
+                        self.cards.extend(cards_in_line)
+
+    def parse_line(self, line):
+        if not line or re.match(r'^(\/+|#)(.*)', line):
+            # Empty line or comment
+            return []
+        elif re.match(r'\d+\s+(.*)', line):
+            # Card Kingdom Format 1
+            logging.debug(f'Matched Card Kingdom Format 1: "{line}"')
+            match = re.search(r'(?P<quantity>\d+)\s+(?P<card>.*)', line)
+            return [match.group('card')]
+        elif re.match(r'\d+x\s+(.*)', line):
+            # Card Kingdom Format 2
+            logging.debug(f'Matched Card Kingdom Format 2: "{line}"')
+            match = re.search(r'(?P<quantity>\d+)x\s+(?P<card>.*)', line)
+            return [match.group('card')]
+        elif line.strip():
+            # Card Kingdom Format 3
+            logging.debug(f'Matched Card Kingdom Format 3: "{line}"')
+            return [line.strip()]
+        else:
+            return []
+
+    def get_cards(self):
+        return self.cards
+
+
 def list_card_names(file_path=None):
     if file_path:
-        with open(file_path, 'r') as f:
-            return f.read().splitlines()
+        logging.info(f'Reading card names from {file_path}')
+        parser = CardParser(file_path)
+        return parser.get_cards()
     else:
+        logging.info(f'Reading card names from stdin')
         return [line.strip() for line in sys.stdin]
 
 
 def download_cards(args):
-    for card_name in list_card_names():
-        response = Scryfall(args.server).cards_named(card_name)
-        response = response.json()
-        logging.debug(f'{json.dumps(response)}')
-        result = Scryfall(args.server).cards_image(response['id'])
-        if result.content:
-            with open(f'{card_name}.png', 'wb') as f:
+    api = Scryfall(args.server)
+    if args.dryrun:
+        api.dryrun = True
+    if not os.path.exists(args.output):
+        os.makedirs(args.output, exist_ok=True)
+    for card_name in list_card_names(args.input):
+        response = api.cards_named(card_name)
+        if response:
+            response = response.json()
+            logging.debug(f'{json.dumps(response)}')
+            result = api.cards_image(response['id'])
+            png = f'{args.output}/{card_name}.png'
+            with open(png, 'wb') as f:
+                logging.info(png)
                 for chunk in result.iter_content(chunk_size=1024):
                     f.write(chunk)
 
