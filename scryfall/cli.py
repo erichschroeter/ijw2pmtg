@@ -1,6 +1,8 @@
 import argparse
 import json
 import logging
+import os
+import sys
 from .api import Scryfall
 
 #region Command line parsing  # noqa
@@ -65,6 +67,11 @@ class App:
                                  default='info',
                                  help='Set the logging verbosity level.')
         self.parser.add_argument('--server', default='https://api.scryfall.com', help="The Scryfall server URL.")
+        self.parser.add_argument('-i', '--input',
+                                 help='A file of card names. Alternatively, a comma-separated list of card names can be provided via stdin.')
+        self.parser.add_argument('-o', '--output',
+                                 default=os.getcwd(),
+                                 help='The output directory.')
         self.parser.set_defaults(func=download_cards)
 
     def parse_args(self, args=None):
@@ -78,18 +85,12 @@ class App:
         self.args.func(self.args)
 
 
-def _write_file(file_path, response):
-    logging.debug(f'writing {file_path}')
-    with open(file_path, 'wb') as f:
-        for chunk in response.iter_content(chunk_size=1024):
-            f.write(chunk)
-
-
-def list_card_names():
-    return [
-        'Dragon Egg',
-        'Dragon Hatchling',
-    ]
+def list_card_names(file_path=None):
+    if file_path:
+        with open(file_path, 'r') as f:
+            return f.read().splitlines()
+    else:
+        return [line.strip() for line in sys.stdin]
 
 
 def download_cards(args):
