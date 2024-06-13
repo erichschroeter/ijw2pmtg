@@ -1,5 +1,6 @@
 import argparse
 import logging
+from .api import Scryfall
 
 #region Command line parsing  # noqa
 
@@ -62,7 +63,7 @@ class App:
                                  choices=['critical', 'error', 'warning', 'info', 'debug'],
                                  default='info',
                                  help='Set the logging verbosity level.')
-        self.parser.add_argument('--server', default='scryfall.com', help="The Scryfall server URL.")
+        self.parser.add_argument('--server', default='https://api.scryfall.com', help="The Scryfall server URL.")
         self.parser.set_defaults(func=download_cards)
 
     def parse_args(self, args=None):
@@ -76,8 +77,28 @@ class App:
         self.args.func(self.args)
 
 
+def _write_file(file_path, response):
+    logging.debug(f'writing {file_path}')
+    with open(file_path, 'wb') as f:
+        for chunk in response.iter_content(chunk_size=1024):
+            f.write(chunk)
+
+
 def download_cards(args):
-    logging.info('downloading cards')
+    # result = Scryfall(args.server).cards_named(exact='farewell')
+    card_name = 'farewell'
+    response = Scryfall(args.server).cards_named(card_name)
+    response = response.json()
+    result = Scryfall(args.server).cards_image(response['id'])
+    if result.content:
+        with open(f'{card_name}.png', 'wb') as f:
+            # f.write(result.content)
+            for chunk in result.iter_content(chunk_size=1024):
+                f.write(chunk)
+                # print(chunk)
+    # import json
+    # import sys
+    # json.dump(result, sys.stdout, indent=4)
 
 
 def main():
