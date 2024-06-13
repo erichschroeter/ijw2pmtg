@@ -1,4 +1,5 @@
 import argparse
+import json
 import logging
 from .api import Scryfall
 
@@ -84,21 +85,23 @@ def _write_file(file_path, response):
             f.write(chunk)
 
 
+def list_card_names():
+    return [
+        'Dragon Egg',
+        'Dragon Hatchling',
+    ]
+
+
 def download_cards(args):
-    # result = Scryfall(args.server).cards_named(exact='farewell')
-    card_name = 'farewell'
-    response = Scryfall(args.server).cards_named(card_name)
-    response = response.json()
-    result = Scryfall(args.server).cards_image(response['id'])
-    if result.content:
-        with open(f'{card_name}.png', 'wb') as f:
-            # f.write(result.content)
-            for chunk in result.iter_content(chunk_size=1024):
-                f.write(chunk)
-                # print(chunk)
-    # import json
-    # import sys
-    # json.dump(result, sys.stdout, indent=4)
+    for card_name in list_card_names():
+        response = Scryfall(args.server).cards_named(card_name)
+        response = response.json()
+        logging.debug(f'{json.dumps(response)}')
+        result = Scryfall(args.server).cards_image(response['id'])
+        if result.content:
+            with open(f'{card_name}.png', 'wb') as f:
+                for chunk in result.iter_content(chunk_size=1024):
+                    f.write(chunk)
 
 
 def main():
