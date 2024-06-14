@@ -95,8 +95,8 @@ class CardParser:
                     # Filter out extra info that Manabox includes sometimes
                     if re.match(r'.+\(.*\)\s+\d*', cards_in_line[0]):
                         manabox = re.search(r'(?P<card>.+)\((?P<setname>.*)\)\s+(?P<printno>\d+)', cards_in_line[0])
-                        self.cards.extend([f"{manabox.group('card').strip()} {manabox.group('printno').strip()}"])
-                        # self.cards.extend([{manabox.group('card').strip()}])
+                        # self.cards.extend([f"{manabox.group('card').strip()} {manabox.group('printno').strip()}"])
+                        self.cards.extend([manabox.group('card').strip()])
                     else:
                         self.cards.extend(cards_in_line)
 
