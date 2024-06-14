@@ -136,23 +136,11 @@ def list_card_names(file_path=None):
 
 
 def slugify(card_name):
-    # card_name = card_name.replace('/', '_')
-    # card_name = card_name.replace('\\', '_')
-    # card_name = card_name.replace('|', '_')
-    # card_name = card_name.replace('"', '_')
-    # card_name = card_name.replace('*', '_')
-    # card_name = card_name.replace('?', '_')
-    # card_name = card_name.replace(':', '_')
-    # card_name = card_name.replace('<', '_')
-    # card_name = card_name.replace('>', '_')
     card_name = re.sub(r'[/\\<>|"\*\?:]', '_', card_name)
     return card_name
 
 
 def download_cards(args):
-    # print(f'SLUG: {slugify("Amonkhet, the Dark Foe")}')
-    # print(f'SLUG: {slugify("Said // Done")}')
-    # return
     api = Scryfall(args.server)
     if args.dryrun:
         api.dryrun = True
