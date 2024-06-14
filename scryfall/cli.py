@@ -65,7 +65,7 @@ class App:
         self.parser = argparse.ArgumentParser(prog='scryfall')
         self.parser.add_argument('-v', '--verbosity',
                                  choices=['critical', 'error', 'warning', 'info', 'debug'],
-                                 default='info',
+                                 default='warning',
                                  help='Set the logging verbosity level.')
         self.parser.add_argument('--server', default='https://api.scryfall.com', help="The Scryfall server URL.")
         self.parser.add_argument('--dryrun', default=False, help='Dry run network and filesystem operations.', action='store_true')
@@ -95,7 +95,8 @@ class CardParser:
                     # Filter out extra info that Manabox includes sometimes
                     if re.match(r'.+\(.*\)\s+\d*', cards_in_line[0]):
                         manabox = re.search(r'(?P<card>.+)\((?P<setname>.*)\)\s+(?P<printno>\d+)', cards_in_line[0])
-                        self.cards.extend([manabox.group('card').strip()])
+                        self.cards.extend([f"{manabox.group('card').strip()} {manabox.group('printno').strip()}"])
+                        # self.cards.extend([{manabox.group('card').strip()}])
                     else:
                         self.cards.extend(cards_in_line)
 
@@ -126,27 +127,45 @@ class CardParser:
 
 def list_card_names(file_path=None):
     if file_path:
-        logging.info(f'Reading card names from {file_path}')
         parser = CardParser(file_path)
-        return parser.get_cards()
+        cards = parser.get_cards()
     else:
-        logging.info(f'Reading card names from stdin')
-        return [line.strip() for line in sys.stdin]
+        cards = [line.strip() for line in sys.stdin]
+    logging.info(f'Found {len(cards)} cards.')
+    return cards
+
+
+def slugify(card_name):
+    # card_name = card_name.replace('/', '_')
+    # card_name = card_name.replace('\\', '_')
+    # card_name = card_name.replace('|', '_')
+    # card_name = card_name.replace('"', '_')
+    # card_name = card_name.replace('*', '_')
+    # card_name = card_name.replace('?', '_')
+    # card_name = card_name.replace(':', '_')
+    # card_name = card_name.replace('<', '_')
+    # card_name = card_name.replace('>', '_')
+    card_name = re.sub(r'[/\\<>|"\*\?:]', '_', card_name)
+    return card_name
 
 
 def download_cards(args):
+    # print(f'SLUG: {slugify("Amonkhet, the Dark Foe")}')
+    # print(f'SLUG: {slugify("Said // Done")}')
+    # return
     api = Scryfall(args.server)
     if args.dryrun:
         api.dryrun = True
     if not os.path.exists(args.output):
         os.makedirs(args.output, exist_ok=True)
+    path_prefix = f'{args.output}/' if args.output else ''
     for card_name in list_card_names(args.input):
         response = api.cards_named(card_name)
         if response:
             response = response.json()
             logging.debug(f'{json.dumps(response)}')
             result = api.cards_image(response['id'])
-            png = f'{args.output}/{card_name}.png'
+            png = f'{path_prefix}{slugify(card_name)}.png'
             with open(png, 'wb') as f:
                 logging.info(png)
                 for chunk in result.iter_content(chunk_size=1024):
