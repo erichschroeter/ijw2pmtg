@@ -72,6 +72,7 @@ class App:
         self.parser.add_argument('-i', '--input',
                                  help='A file of card names. Alternatively, a newline-separated list of card names can be provided via stdin.')
         self.parser.add_argument('-o', '--output', default=os.getcwd(), help='The output directory.')
+        self.parser.add_argument('cards', nargs='*', help='Names of Magic the Gathering (MTG) cards.')
         self.parser.set_defaults(func=download_cards)
 
     def parse_args(self, args=None):
@@ -125,9 +126,11 @@ class CardParser:
         return self.cards
 
 
-def list_card_names(file_path=None):
-    if file_path:
-        parser = CardParser(file_path)
+def list_card_names(args):
+    if args.cards:
+        cards = args.cards
+    elif args.input:
+        parser = CardParser(args.input)
         cards = parser.get_cards()
     else:
         cards = [line.strip() for line in sys.stdin]
@@ -147,7 +150,7 @@ def download_cards(args):
     if not os.path.exists(args.output):
         os.makedirs(args.output, exist_ok=True)
     path_prefix = f'{args.output}/' if args.output else ''
-    for card_name in list_card_names(args.input):
+    for card_name in list_card_names(args):
         response = api.cards_named(card_name)
         if response:
             response = response.json()
