@@ -80,6 +80,12 @@ class App:
         rotate_parser.add_argument('-a', '--angle', default=90.0, type=float, choices=[Range(0.0, 360.0)], help='The angle to rotate the images.')
         rotate_parser.set_defaults(func=rotate_images)
 
+        stitch_parser = self.subparsers.add_parser('stitch', help='Stitch images together.')
+        stitch_parser.add_argument('images', nargs='*', help='The images to stitch together.')
+        stitch_parser.add_argument('-x', '--width', default=1, type=int, help='The number of images to stitch together horizontally.')
+        stitch_parser.add_argument('-y', '--height', default=1, type=int, help='The number of images to stitch together vertically.')
+        stitch_parser.set_defaults(func=stitch_images)
+
     def parse_args(self, args=None):
         self.args = self.parser.parse_args(args)
 
@@ -101,6 +107,39 @@ class Range:
     
     def __repr__(self) -> str:
         return f'[{self.min}, {self.max}]'
+
+
+def arrange_images(images, width=1, height=1):
+    logging.debug(f'Arranging {len(images)} as {width}x{height}')
+    logging.debug(f'Arranging images: {images}')
+    card_pixel_width = 1040
+    card_pixel_height = 745
+    grid = Image.new('RGBA', (width * card_pixel_width, height * card_pixel_height))
+    image_data = []
+    for i, image in enumerate(images):
+        img = Image.open(image)
+        image_data.append(img)
+        grid.paste(img, (i % width * card_pixel_width, i // width * card_pixel_height))
+    return grid
+
+
+def stitch_images(args):
+    import math
+    max_page_count = math.ceil(len(args.images) / (args.width * args.height))
+    logging.info(f'Arranging {len(args.images)} images on {max_page_count} pages of {args.width}x{args.height}')
+    cards = []
+    page_count = 0
+    for img in args.images:
+        cards.append(img)
+        if len(cards) >= max_page_count:
+            page = arrange_images(cards, args.width, args.height)
+            page_count += 1
+            page.save(f'grid_{page_count}.png')
+            cards = []
+    if cards:  # If there are any cards left over, make a final page
+        page = arrange_images(cards, args.width, args.height)
+        page_count += 1
+        page.save(f'grid_{page_count}.png')
 
 
 def rotate_image(image, degrees):
