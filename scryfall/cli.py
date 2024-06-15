@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 import argparse
 import json
 import logging
@@ -5,6 +6,7 @@ import os
 import re
 import sys
 from .api import Scryfall
+from .parsing import detect_format
 
 #region Command line parsing  # noqa
 
@@ -93,7 +95,8 @@ class App:
         self.args.func(self.args)
 
 
-class CardParser:
+class CardParser(ABC):
+
     def __init__(self, filename):
         self.cards = []
         with open(filename, 'r') as file:
@@ -107,6 +110,16 @@ class CardParser:
                         self.cards.extend([manabox.group('card').strip()])
                     else:
                         self.cards.extend(cards_in_line)
+
+    @abstractmethod
+    def parse_line(self, line):
+        return []
+
+    def get_cards(self):
+        return self.cards
+
+
+class CardKingdomFormat1Parser:
 
     def parse_line(self, line):
         if not line or re.match(r'^(\/+|#)(.*)', line):
@@ -129,16 +142,16 @@ class CardParser:
         else:
             return []
 
-    def get_cards(self):
-        return self.cards
-
 
 def list_card_names(args):
     if args.cards:
         cards = args.cards
     elif args.input:
-        parser = CardParser(args.input)
-        cards = parser.get_cards()
+        # parser = CardParser(args.input)
+        # cards = parser.get_cards()
+        factory = detect_format(args.input)
+        parser = factory.create_parser()
+        cards = parser.parse(args.input)
     else:
         cards = [line.strip() for line in sys.stdin]
     logging.info(f'Found {len(cards)} cards.')
