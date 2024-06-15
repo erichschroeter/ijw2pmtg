@@ -152,6 +152,9 @@ def list_card_names(args):
         factory = detect_format(args.input)
         parser = factory.create_parser()
         cards = parser.parse(args.input)
+        print(cards)
+        print(f'Found {len(cards)} cards.')
+        sys.exit(0)
     else:
         cards = [line.strip() for line in sys.stdin]
     logging.info(f'Found {len(cards)} cards.')
