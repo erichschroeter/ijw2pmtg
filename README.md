@@ -13,6 +13,14 @@ python3 -m scryfall --help
 
 ## Usage
 
+### Download card images
+
 ```bash
 cat my_deck.txt | python3 -m scryfall -v info --output 'My Cool Deck'
+```
+
+### Stitch images into grid
+
+```bash
+python3 -m proxy -v info stitch -x 2 -y 4 Nazgul/*.png
 ```
