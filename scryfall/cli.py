@@ -59,13 +59,20 @@ class RawTextArgumentDefaultsHelpFormatter(argparse.ArgumentDefaultsHelpFormatte
 
 #endregion Command line parsing  # noqa
 
+
+def dryrun(msg):
+    green = "\u001b[32m"
+    reset = "\x1b[0m"
+    print(f'{green}DRYRUN{reset}: {msg}')
+
+
 class App:
     def __init__(self) -> None:
         self.args = None
         self.parser = argparse.ArgumentParser(prog='scryfall')
         self.parser.add_argument('-v', '--verbosity',
                                  choices=['critical', 'error', 'warning', 'info', 'debug'],
-                                 default='warning',
+                                 default='info',
                                  help='Set the logging verbosity level.')
         self.parser.add_argument('--server', default='https://api.scryfall.com', help="The Scryfall server URL.")
         self.parser.add_argument('--dryrun', default=False, help='Dry run network and filesystem operations.', action='store_true')
@@ -145,12 +152,13 @@ def slugify(card_name):
 
 def download_cards(args):
     api = Scryfall(args.server)
-    if args.dryrun:
-        api.dryrun = True
     if not os.path.exists(args.output):
         os.makedirs(args.output, exist_ok=True)
     path_prefix = f'{args.output}/' if args.output else ''
     for card_name in list_card_names(args):
+        if args.dryrun:
+            dryrun(f'Downloading {card_name}')
+            continue
         response = api.cards_named(card_name)
         if response:
             response = response.json()
