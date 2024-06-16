@@ -6,7 +6,7 @@ import os
 import re
 import sys
 from .api import Scryfall
-from .parsing import detect_format
+from .parsing import detect_format, CardParserFactory
 
 #region Command line parsing  # noqa
 
@@ -95,66 +95,14 @@ class App:
         self.args.func(self.args)
 
 
-class CardParser(ABC):
-
-    def __init__(self, filename):
-        self.cards = []
-        with open(filename, 'r') as file:
-            for line in file:
-                cards_in_line = self.parse_line(line.strip())
-                if cards_in_line:
-                    # Filter out extra info that Manabox includes sometimes
-                    if re.match(r'.+\(.*\)\s+\d*', cards_in_line[0]):
-                        manabox = re.search(r'(?P<card>.+)\((?P<setname>.*)\)\s+(?P<printno>\d+)', cards_in_line[0])
-                        # self.cards.extend([f"{manabox.group('card').strip()} {manabox.group('printno').strip()}"])
-                        self.cards.extend([manabox.group('card').strip()])
-                    else:
-                        self.cards.extend(cards_in_line)
-
-    @abstractmethod
-    def parse_line(self, line):
-        return []
-
-    def get_cards(self):
-        return self.cards
-
-
-class CardKingdomFormat1Parser:
-
-    def parse_line(self, line):
-        if not line or re.match(r'^(\/+|#)(.*)', line):
-            # Empty line or comment
-            return []
-        elif re.match(r'\d+\s+(.*)', line):
-            # Card Kingdom Format 1
-            logging.debug(f'Matched Card Kingdom Format 1: "{line}"')
-            match = re.search(r'(?P<quantity>\d+)\s+(?P<card>.*)', line)
-            return [match.group('card')]
-        elif re.match(r'\d+x\s+(.*)', line):
-            # Card Kingdom Format 2
-            logging.debug(f'Matched Card Kingdom Format 2: "{line}"')
-            match = re.search(r'(?P<quantity>\d+)x\s+(?P<card>.*)', line)
-            return [match.group('card')]
-        elif line.strip():
-            # Card Kingdom Format 3
-            logging.debug(f'Matched Card Kingdom Format 3: "{line}"')
-            return [line.strip()]
-        else:
-            return []
-
-
 def list_card_names(args):
     if args.cards:
         cards = args.cards
     elif args.input:
-        # parser = CardParser(args.input)
-        # cards = parser.get_cards()
-        factory = detect_format(args.input)
-        parser = factory.create_parser()
-        cards = parser.parse(args.input)
-        print(cards)
-        print(f'Found {len(cards)} cards.')
-        sys.exit(0)
+        factory = CardParserFactory()
+        parser = factory.create_parser(args.input)
+        logging.error(parser)
+        cards = parser.parse_cards(args.input)
     else:
         cards = [line.strip() for line in sys.stdin]
     logging.info(f'Found {len(cards)} cards.')
