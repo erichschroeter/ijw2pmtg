@@ -6,7 +6,7 @@ import os
 import re
 import sys
 from .api import Scryfall
-from .parsing import detect_format, CardParserFactory
+from .parsing import CardParserFactory
 
 #region Command line parsing  # noqa
 

@@ -19,6 +19,12 @@ python3 -m scryfall --help
 cat my_deck.txt | python3 -m scryfall -v info --output 'My Cool Deck'
 ```
 
+### Rotate all images 90 degrees
+
+```bash
+python3 -m proxy -v info rotate Nazgul/*.png
+```
+
 ### Stitch images into grid
 
 ```bash

@@ -84,6 +84,7 @@ class App:
         stitch_parser.add_argument('images', nargs='*', help='The images to stitch together.')
         stitch_parser.add_argument('-x', '--width', default=1, type=int, help='The number of images to stitch together horizontally.')
         stitch_parser.add_argument('-y', '--height', default=1, type=int, help='The number of images to stitch together vertically.')
+        stitch_parser.add_argument('-o', '--output', default=os.getcwd(), help='The output directory.')
         stitch_parser.set_defaults(func=stitch_images)
 
     def parse_args(self, args=None):
@@ -124,22 +125,27 @@ def arrange_images(images, width=1, height=1):
 
 
 def stitch_images(args):
+    if not os.path.exists(args.output):
+        os.makedirs(args.output, exist_ok=True)
     import math
     max_page_count = math.ceil(len(args.images) / (args.width * args.height))
     logging.info(f'Arranging {len(args.images)} images on {max_page_count} pages of {args.width}x{args.height}')
+    cards_per_page  = args.width * args.height
     cards = []
     page_count = 0
     for img in args.images:
         cards.append(img)
-        if len(cards) >= max_page_count:
+        if len(cards) >= cards_per_page:
             page = arrange_images(cards, args.width, args.height)
             page_count += 1
-            page.save(f'grid_{page_count}.png')
+            grid_filename = os.path.join(args.output, f'grid_{args.width}x{args.height}_{page_count}.png')
+            page.save(grid_filename)
             cards = []
     if cards:  # If there are any cards left over, make a final page
         page = arrange_images(cards, args.width, args.height)
         page_count += 1
-        page.save(f'grid_{page_count}.png')
+        grid_filename = os.path.join(args.output, f'grid_{args.width}x{args.height}_{page_count}.png')
+        page.save(grid_filename)
 
 
 def rotate_image(image, degrees):

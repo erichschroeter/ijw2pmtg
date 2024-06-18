@@ -45,8 +45,9 @@ class CardKingdomFormat3Parser(CardParser):
 
 class ManaBoxExportFormatParser(CardParser):
     def parse_card(self, line: str):
-        match = re.search(r'^\s*(?P<card>.+)\((?P<setname>.*)\)\s+(?P<printno>\d+)', line)
-        return match.group('card')
+        match = re.search(r'^(?P<quantity>\d*)\s*(?P<card>.+)\((?P<setname>.*)\)\s+(?P<printno>\d+)', line)
+        if match and match.groupdict().get('card'):
+            return match.group('card').strip()
 
 class ManaBoxCollectionFormatParser(CardParser):
     def parse_card(self, line: str):
@@ -64,20 +65,24 @@ class CardParserFactory(ABC):
             return ManaBoxCollectionFormatFactory().create_parser(file_path)
         else:
             with open(file_path, 'r') as file:
-                # head = [next(file) for _ in range(1)]
-                head = file.readline().strip()
-                # Determine the text file format based on some logic or condition
-                logging.warning(f'detecting: "{head}"')
-                if re.match(r'^.+\(.*\)\s+\d*', head):
-                    return ManaBoxExportFormatFactory().create_parser(file_path)
-                elif re.match(r'^\d+x', head):
-                    return Format2FormatFactory().create_parser(file_path)
-                elif re.match(r'^\d+', head):
-                    return Format1FormatFactory().create_parser(file_path)
-                # elif "," in head:  # Format 2
-                #     return Format2FormatFactory().create_parser(file_path)
-                else:
-                    return Format3FormatFactory().create_parser(file_path)
+                for line in file:
+                    if not line or re.match(r'^(\/+|#)(.*)', line):
+                        continue  # ignore empty lines and comments
+                    # head = [next(file) for _ in range(1)]
+                    # head = file.readline().strip()
+                    head = line.strip()
+                    # Determine the text file format based on some logic or condition
+                    logging.warning(f'detecting: "{head}"')
+                    if re.match(r'^.+\(.*\)\s+\d*', head):
+                        return ManaBoxExportFormatFactory().create_parser(file_path)
+                    elif re.match(r'^\d+x', head):
+                        return Format2FormatFactory().create_parser(file_path)
+                    elif re.match(r'^\d+', head):
+                        return Format1FormatFactory().create_parser(file_path)
+                    # elif "," in head:  # Format 2
+                    #     return Format2FormatFactory().create_parser(file_path)
+                    else:
+                        return Format3FormatFactory().create_parser(file_path)
 
 
 class Format1FormatFactory(CardParserFactory):
