@@ -111,8 +111,6 @@ class Range:
 
 
 def arrange_images(images, width=1, height=1):
-    logging.debug(f'Arranging {len(images)} as {width}x{height}')
-    logging.debug(f'Arranging images: {images}')
     card_pixel_width = 1040
     card_pixel_height = 745
     grid = Image.new('RGBA', (width * card_pixel_width, height * card_pixel_height))
@@ -130,18 +128,22 @@ def stitch_images(args):
     import math
     max_page_count = math.ceil(len(args.images) / (args.width * args.height))
     logging.info(f'Arranging {len(args.images)} images on {max_page_count} pages of {args.width}x{args.height}')
-    cards_per_page  = args.width * args.height
+    cards_per_page = args.width * args.height
     cards = []
     page_count = 0
     for img in args.images:
         cards.append(img)
         if len(cards) >= cards_per_page:
+            logging.info(f'Arranging {len(cards)} as {args.width}x{args.height}')
+            logging.info(f'Arranging images: {cards}')
             page = arrange_images(cards, args.width, args.height)
             page_count += 1
             grid_filename = os.path.join(args.output, f'grid_{args.width}x{args.height}_{page_count}.png')
             page.save(grid_filename)
             cards = []
     if cards:  # If there are any cards left over, make a final page
+        logging.info(f'Arranging {len(cards)} as {args.width}x{args.height}')
+        logging.info(f'Arranging images: {cards}')
         page = arrange_images(cards, args.width, args.height)
         page_count += 1
         grid_filename = os.path.join(args.output, f'grid_{args.width}x{args.height}_{page_count}.png')
@@ -149,7 +151,6 @@ def stitch_images(args):
 
 
 def rotate_image(image, degrees):
-    logging.debug(f'Rotating {image} {degrees}°')
     with Image.open(image) as img:
         image = img.rotate(degrees, expand=True).save(image)
     return image
@@ -157,6 +158,7 @@ def rotate_image(image, degrees):
 
 def rotate_images(args):
     for img in args.images:
+        logging.info(f'Rotating {img} {args.angle}°')
         rotate_image(img, args.angle)
 
 
