@@ -1,0 +1,13 @@
+[CREATURES]
+1 Bhaal's Invoker
+1 Chardalyn Dragon
+1 Dragon Egg
+1 Dragon Hatchling
+1 Fang Dragon // Forktail Sweep
+1 Furnace Whelp
+1 Lightning Shrieker
+1 Reckless Barbarian
+1 Scion of Ugin
+1 Sparktongue Dragon
+1 Young Red Dragon // Bathe in Gold
+
