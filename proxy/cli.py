@@ -122,7 +122,32 @@ def arrange_images(images, width=1, height=1):
     return grid
 
 
+def stitch_images(args, cards=None, page_count=0):
+    if cards is None:
+        cards = args.images
+
+    if not os.path.exists(args.output):
+        os.makedirs(args.output, exist_ok=True)
+    import math
+    max_page_count = math.ceil(len(cards) / (args.width * args.height))
+    logging.info(f'Arranging {len(cards)} images on page {page_count+1} of {max_page_count} pages of {args.width}x{args.height}')
+
+    cards_per_page = args.width * args.height
+
+    if len(cards) >= cards_per_page:
+        # If there are enough images to fill a page, create the page and recurse with the remaining images
+        page = arrange_images(cards[:cards_per_page], args.width, args.height)
+        grid_filename = os.path.join(args.output, f'grid_{args.width}x{args.height}_{page_count+1}.png')
+        page.save(grid_filename)
+        stitch_images(args, cards[cards_per_page:], page_count + 1)
+    elif cards:
+        # If there are any leftover images, create a final page with them
+        page = arrange_images(cards, args.width, args.height)
+        grid_filename = os.path.join(args.output, f'grid_{args.width}x{args.height}_{page_count+1}.png')
+        page.save(grid_filename)
+
 def stitch_images(args):
+    IMG_FILENAME_PREFIX = '_grid'
     if not os.path.exists(args.output):
         os.makedirs(args.output, exist_ok=True)
     import math
@@ -138,7 +163,7 @@ def stitch_images(args):
             logging.info(f'Arranging images: {cards}')
             page = arrange_images(cards, args.width, args.height)
             page_count += 1
-            grid_filename = os.path.join(args.output, f'grid_{args.width}x{args.height}_{page_count}.png')
+            grid_filename = os.path.join(args.output, f'{IMG_FILENAME_PREFIX}{args.width}x{args.height}_{page_count}.png')
             page.save(grid_filename)
             cards = []
     if cards:  # If there are any cards left over, make a final page
@@ -146,7 +171,7 @@ def stitch_images(args):
         logging.info(f'Arranging images: {cards}')
         page = arrange_images(cards, args.width, args.height)
         page_count += 1
-        grid_filename = os.path.join(args.output, f'grid_{args.width}x{args.height}_{page_count}.png')
+        grid_filename = os.path.join(args.output, f'{IMG_FILENAME_PREFIX}{args.width}x{args.height}_{page_count}.png')
         page.save(grid_filename)
 
 
