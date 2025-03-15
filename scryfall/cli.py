@@ -81,8 +81,16 @@ class App:
         self.parser.add_argument('-i', '--input',
                                  help='A file of card names. Alternatively, a newline-separated list of card names can be provided via stdin.')
         self.parser.add_argument('-o', '--output', default=os.getcwd(), help='The output directory.')
+        self.parser.add_argument('--list', action='store_true', help='Searches for cards based on query. Does not download them.')
+        self.parser.add_argument('--name-only', action='store_true', help='List card names only instead of JSON data.')
         self.parser.add_argument('cards', nargs='*', help='Names of Magic the Gathering (MTG) cards.')
-        self.parser.set_defaults(func=download_cards)
+        self.parser.set_defaults(func=self.default_func)
+
+    def default_func(self, args):
+        if args.list:
+            list_cards(args)
+        else:
+            download_cards(args)
 
     def parse_args(self, args=None):
         self.args = self.parser.parse_args(args)
@@ -95,13 +103,35 @@ class App:
         self.args.func(self.args)
 
 
+def list_cards(args):
+    api = Scryfall(args.server)
+    query = ' '.join(args.cards) if args.cards else ''
+    if query:
+        response = api.cards_search(query)
+        if response:
+            logging.info(f'Found {len(response.json()["data"])} cards.')
+            response = response.json()
+            if args.name_only:
+                output = '\n'.join([card['name'] for card in response['data']])
+            else:
+                output = json.dumps(response, indent=2)
+            if args.output and not os.path.isdir(args.output):
+                with open(args.output, 'w') as f:
+                    f.write(output)
+                logging.info(f'Results saved to {args.output}')
+            else:
+                print(output)
+    else:
+        logging.error('No query provided for listing cards.')
+
+
 def list_card_names(args):
     if args.cards:
         cards = args.cards
     elif args.input:
         factory = CardParserFactory()
         parser = factory.create_parser(args.input)
-        logging.error(parser)
+        logging.debug(f"Using parser {parser.__class__.__name__}")
         cards = parser.parse_cards(args.input)
     else:
         cards = [line.strip() for line in sys.stdin]

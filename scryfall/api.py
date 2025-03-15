@@ -11,6 +11,9 @@ class Scryfall:
     def cards_image(self, uuid, format='image', version='png', **kwargs):
         return self._endpoint_get(f'cards/{uuid}', format=format, version=version, **kwargs)
 
+    def cards_search(self, query, format='json'):
+        return self._endpoint_get(f'cards/search', format=format, q=query)
+
     def _endpoint_get(self, endpoint, **kwargs):
         url = f'{self.server_url}/{endpoint}'
         logging.debug(f'GET {url} with params {kwargs}')
