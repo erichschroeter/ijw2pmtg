@@ -71,16 +71,16 @@ def dryrun(msg):
 class App:
     def __init__(self) -> None:
         self.args = None
-        # TODO refactor to support -l or --list to list cards
-        # TODO refactor to support -d or --download to download cards
-        # TODO refactor to default to --list, default to --with-block
-        # TODO refactor to support --with-set
-        # TODO refactor to support --with-cn
-        # TODO refactor to support --with-block
-        # TODO refactor to support --json
-        # TODO refactor to support "Card Name (Set Name)" input
-        # TODO refactor to support "Card Name (Set Name) collector-number" input
-        # TODO refactor to support "Card Name e:setname cn:number b:block" input
+        # TODO [x] refactor to support -l or --list to list cards
+        # TODO [x] refactor to support -d or --download to download cards
+        # TODO [x] refactor to default to --list
+        # TODO [x] refactor to support --with-set
+        # TODO [x] refactor to support --with-cn
+        # TODO [x] refactor to support --with-block
+        # TODO [x] refactor to support --json
+        # TODO [ ] refactor to support input format "Card Name (Set Name)"
+        # TODO [ ] refactor to support input format "Card Name (Set Name) collector-number"
+        # TODO [ ] refactor to support input format "Card Name e:setname cn:number b:block"
         self.parser = argparse.ArgumentParser(prog='scryfall')
         self.parser.add_argument('-v', '--verbosity',
                                  choices=['critical', 'error', 'warning', 'info', 'debug'],
@@ -91,9 +91,11 @@ class App:
         self.parser.add_argument('-i', '--input',
                                  help='A file of card names. Alternatively, a newline-separated list of card names can be provided via stdin.')
         self.parser.add_argument('-o', '--output', default=os.getcwd(), help='The output directory.')
-        self.parser.add_argument('--list', action='store_true', help='Searches for cards based on query. Does not download them.')
-        self.parser.add_argument('--name-only', action='store_true', help='List card names only instead of JSON data.')
-        self.parser.add_argument('--name-with-set', action='store_true', help='List card names and set name instead of JSON data.')
+        self.parser.add_argument('-l', '--list', action='store_true', default=True, help='Searches for cards based on query. Does not download them.')
+        self.parser.add_argument('--json', action='store_true', help='Output results in JSON format.')
+        self.parser.add_argument('--with-block', action='store_true', help='Include 3-letter block code when listing cards. e.g. ZNR for Zendikar Rising.')
+        self.parser.add_argument('--with-cn', action='store_true', help='Include collector number when listing cards. e.g. 1/280.')
+        self.parser.add_argument('--with-set', action='store_true', help='Include set name when listing cards. e.g. Zendikar Rising.')
         self.parser.add_argument('cards', nargs='*', help='Names of Magic the Gathering (MTG) cards.')
         self.parser.set_defaults(func=self.default_func)
 
@@ -122,12 +124,16 @@ def list_cards(args):
         if response:
             logging.info(f'Found {len(response.json()["data"])} cards.')
             response = response.json()
-            if args.name_only:
-                output = '\n'.join([card['name'] for card in response['data']])
-            elif args.name_with_set:
+            if args.json:
+                output = json.dumps(response, indent=2)
+            elif args.with_block and args.with_cn and args.with_set:
+                output = '\n'.join([f"{card['name']} ({card['set']}) {card['collector_number']} {card['set_name']}" for card in response['data']])
+            elif args.with_block and args.with_cn:
+                output = '\n'.join([f"{card['name']} ({card['set']}) {card['collector_number']}" for card in response['data']])
+            elif args.with_block:
                 output = '\n'.join([f"{card['name']} ({card['set']})" for card in response['data']])
             else:
-                output = json.dumps(response, indent=2)
+                output = '\n'.join([card['name'] for card in response['data']])
             if args.output and not os.path.isdir(args.output):
                 with open(args.output, 'w') as f:
                     f.write(output)
