@@ -71,6 +71,16 @@ def dryrun(msg):
 class App:
     def __init__(self) -> None:
         self.args = None
+        # TODO refactor to support -l or --list to list cards
+        # TODO refactor to support -d or --download to download cards
+        # TODO refactor to default to --list, default to --with-block
+        # TODO refactor to support --with-set
+        # TODO refactor to support --with-cn
+        # TODO refactor to support --with-block
+        # TODO refactor to support --json
+        # TODO refactor to support "Card Name (Set Name)" input
+        # TODO refactor to support "Card Name (Set Name) collector-number" input
+        # TODO refactor to support "Card Name e:setname cn:number b:block" input
         self.parser = argparse.ArgumentParser(prog='scryfall')
         self.parser.add_argument('-v', '--verbosity',
                                  choices=['critical', 'error', 'warning', 'info', 'debug'],
@@ -83,6 +93,7 @@ class App:
         self.parser.add_argument('-o', '--output', default=os.getcwd(), help='The output directory.')
         self.parser.add_argument('--list', action='store_true', help='Searches for cards based on query. Does not download them.')
         self.parser.add_argument('--name-only', action='store_true', help='List card names only instead of JSON data.')
+        self.parser.add_argument('--name-with-set', action='store_true', help='List card names and set name instead of JSON data.')
         self.parser.add_argument('cards', nargs='*', help='Names of Magic the Gathering (MTG) cards.')
         self.parser.set_defaults(func=self.default_func)
 
@@ -113,6 +124,8 @@ def list_cards(args):
             response = response.json()
             if args.name_only:
                 output = '\n'.join([card['name'] for card in response['data']])
+            elif args.name_with_set:
+                output = '\n'.join([f"{card['name']} ({card['set']})" for card in response['data']])
             else:
                 output = json.dumps(response, indent=2)
             if args.output and not os.path.isdir(args.output):
@@ -144,6 +157,10 @@ def slugify(card_name):
     return card_name
 
 
+def download_image(file_path, url):
+    pass
+
+
 def download_cards(args):
     api = Scryfall(args.server)
     if not os.path.exists(args.output):
@@ -158,6 +175,15 @@ def download_cards(args):
             response = response.json()
             logging.debug(f'{json.dumps(response)}')
             result = api.cards_image(response['id'])
+            png = f'{path_prefix}{slugify(card_name)}.png'
+            if len(response['card_faces']) > 1:
+                png = f'{path_prefix}{slugify(card_name)}_front.png'
+                with open(png, 'wb') as f:
+                    logging.info(png)
+                    for chunk in result.iter_content(chunk_size=1024):
+                        f.write(chunk)
+                result = api.cards_image(response['id'], face='back')
+                png = f'{path_prefix}{slugify(card_name)}_back.png'
             png = f'{path_prefix}{slugify(card_name)}.png'
             with open(png, 'wb') as f:
                 logging.info(png)
