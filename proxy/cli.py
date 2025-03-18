@@ -62,7 +62,7 @@ class App:
         self.parser = argparse.ArgumentParser(prog='proxy')
         self.parser.add_argument('-v', '--verbosity',
                                  choices=['critical', 'error', 'warning', 'info', 'debug'],
-                                 default='warning',
+                                 default='info',
                                  help='Set the logging verbosity level.')
         self.parser.add_argument('--dryrun', default=False, help='Dry run network and filesystem operations.', action='store_true')
         self.parser.add_argument('-i', '--input',
@@ -159,16 +159,16 @@ def stitch_images(args):
     for img in args.images:
         cards.append(img)
         if len(cards) >= cards_per_page:
-            logging.info(f'Arranging {len(cards)} as {args.width}x{args.height}')
-            logging.info(f'Arranging images: {cards}')
+            logging.info(f'Arranging {len(cards)} images as {args.width}x{args.height}')
+            logging.debug(f'Arranging images: {cards}')
             page = arrange_images(cards, args.width, args.height)
             page_count += 1
             grid_filename = os.path.join(args.output, f'{IMG_FILENAME_PREFIX}{args.width}x{args.height}_{page_count}.png')
             page.save(grid_filename)
             cards = []
     if cards:  # If there are any cards left over, make a final page
-        logging.info(f'Arranging {len(cards)} as {args.width}x{args.height}')
-        logging.info(f'Arranging images: {cards}')
+        logging.info(f'Arranging {len(cards)} images as {args.width}x{args.height}')
+        logging.debug(f'Arranging images: {cards}')
         page = arrange_images(cards, args.width, args.height)
         page_count += 1
         grid_filename = os.path.join(args.output, f'{IMG_FILENAME_PREFIX}{args.width}x{args.height}_{page_count}.png')
@@ -183,7 +183,7 @@ def rotate_image(image, degrees):
 
 def rotate_images(args):
     for img in args.images:
-        logging.info(f'Rotating {img} {args.angle}°')
+        logging.info(f'Rotating by {args.angle}° "{img}"')
         rotate_image(img, args.angle)
 
 
