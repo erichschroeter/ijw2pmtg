@@ -152,8 +152,8 @@ class App:
             "--angle",
             default=90.0,
             type=float,
-            choices=[Range(0.0, 360.0)],
-            help="The angle to rotate the images.",
+            choices=[Range(-360.0, 360.0)],
+            help="The angle to rotate the images (between -360 and 360 degrees).",
         )
         rotate_parser.set_defaults(func=rotate_images)
 
@@ -199,7 +199,7 @@ class Range:
         self.max = max
 
     def __eq__(self, other: object) -> bool:
-        return self.min <= other <= other.max
+        return self.min <= float(other) <= self.max
 
     def __repr__(self) -> str:
         return f"[{self.min}, {self.max}]"
