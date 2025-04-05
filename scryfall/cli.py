@@ -1,16 +1,12 @@
-from abc import ABC, abstractmethod
 import argparse
-from dataclasses import dataclass
 import json
 import logging
 import os
 import re
 import sys
-import time
 from .api import Scryfall
-from .parsing import CardParserFactory
 from .api import Card
-from .api import IMAGE_FILENAME_FORMAT  # Add this import at the top
+from scryfall import IMAGE_FILENAME_FORMAT
 
 # region Command line parsing  # noqa
 
@@ -262,17 +258,6 @@ def list_cards(args):
                 print(output)
     else:
         logging.error("No query provided for listing cards.")
-
-
-@dataclass
-class Card:
-    name: str
-    uuid: str = None
-    block: str = None
-    set_name: str = None
-    collector_number: str = None
-    is_double_faced: bool = False
-    quantity: int = 1
 
 
 def parse_card_input(card_input):

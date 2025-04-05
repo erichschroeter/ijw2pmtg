@@ -1,12 +1,9 @@
-import logging
 import requests
 import os
-import json
 import time
 from dataclasses import dataclass
 
 from scryfall.cache import BinaryCacheStrategy, CacheManager, JsonCacheStrategy
-from scryfall import IMAGE_FILENAME_FORMAT
 
 
 def sanitize_card_name(name: str) -> str:
@@ -173,7 +170,7 @@ class Scryfall:
         return response.content
 
     def cards_search(self, query, format="json") -> list[Card]:
-        response = self._endpoint_get(f"cards/search", format=format, q=query)
+        response = self._endpoint_get("cards/search", format=format, q=query)
         if response.ok:
             data = response.json()
             return [Card.from_json(card_data) for card_data in data["data"]]
@@ -189,6 +186,5 @@ class Scryfall:
         url = self._endpoint_get_url(endpoint, **kwargs)
         self._rate_limiter.throttle()
         response = requests.get(url)
-        # logging.debug(f"RESPONSE {url} ->\n{response}")
         response.raise_for_status()
         return response

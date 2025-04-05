@@ -2,11 +2,7 @@ import io
 import unittest
 from unittest.mock import patch, MagicMock
 import tempfile
-from scryfall.api import Scryfall
-from scryfall.cli import download_cards, list_card_names, Card, parse_card_input
-import shutil
-import os
-import json
+from scryfall.cli import list_card_names, Card, parse_card_input
 
 
 class TestParseCardInput(unittest.TestCase):
@@ -101,8 +97,7 @@ class TestListCardNames(unittest.TestCase):
         self.assertEqual(cards[0].name, "Black Lotus")
 
     @patch("scryfall.api.Scryfall")
-    @patch("scryfall.parsing.CardParserFactory")
-    def test_list_card_names_with_input_file(self, MockScryfall, MockFactory):
+    def test_list_card_names_with_input_file(self, MockScryfall):
         args = MagicMock()
         args.cards = None
         with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp_file:
@@ -122,8 +117,6 @@ class TestListCardNames(unittest.TestCase):
             }
             mock_api.cards_named.return_value = mock_response
 
-            mock_parser = MockFactory.return_value.create_parser.return_value
-            mock_parser.parse_cards.return_value = ["Black Lotus"]
             cards = list_card_names(args, mock_api)
             self.assertEqual(len(cards), 1)
             self.assertEqual(cards[0].name, "Black Lotus")

@@ -4,7 +4,6 @@ from scryfall.api import Scryfall, Card, sanitize_card_name, unsanitize_card_nam
 import tempfile
 import shutil
 import os.path
-import json
 import pathlib
 
 
