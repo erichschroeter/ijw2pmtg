@@ -1,12 +1,16 @@
 from abc import ABC, abstractmethod
 import argparse
+from dataclasses import dataclass
 import json
 import logging
 import os
 import re
 import sys
+import time
 from .api import Scryfall
 from .parsing import CardParserFactory
+from .api import Card
+from .api import IMAGE_FILENAME_FORMAT  # Add this import at the top
 
 # region Command line parsing  # noqa
 
@@ -29,13 +33,58 @@ class ColorLogFormatter(logging.Formatter):
     loglevel = "%(levelname)s"
     message = " - %(message)s"
 
-    FORMATS = {
-        logging.DEBUG: timestamp + blue + loglevel + reset + message,
-        logging.INFO: timestamp + green + loglevel + reset + message,
-        logging.WARNING: timestamp + yellow + loglevel + reset + message,
-        logging.ERROR: timestamp + red + loglevel + reset + message,
-        logging.CRITICAL: timestamp + bold_red + loglevel + reset + message,
-    }
+    def __init__(self, with_timestamp=False):
+        super().__init__()
+        if with_timestamp:
+            self.FORMATS = {
+                logging.DEBUG: (
+                    self.timestamp
+                    + self.blue
+                    + self.loglevel
+                    + self.reset
+                    + self.message
+                ),
+                logging.INFO: (
+                    self.timestamp
+                    + self.green
+                    + self.loglevel
+                    + self.reset
+                    + self.message
+                ),
+                logging.WARNING: (
+                    self.timestamp
+                    + self.yellow
+                    + self.loglevel
+                    + self.reset
+                    + self.message
+                ),
+                logging.ERROR: (
+                    self.timestamp
+                    + self.red
+                    + self.loglevel
+                    + self.reset
+                    + self.message
+                ),
+                logging.CRITICAL: (
+                    self.timestamp
+                    + self.bold_red
+                    + self.loglevel
+                    + self.reset
+                    + self.message
+                ),
+            }
+        else:
+            self.FORMATS = {
+                logging.DEBUG: (self.blue + self.loglevel + self.reset + self.message),
+                logging.INFO: (self.green + self.loglevel + self.reset + self.message),
+                logging.WARNING: (
+                    self.yellow + self.loglevel + self.reset + self.message
+                ),
+                logging.ERROR: (self.red + self.loglevel + self.reset + self.message),
+                logging.CRITICAL: (
+                    self.bold_red + self.loglevel + self.reset + self.message
+                ),
+            }
 
     def format(self, record):
         log_fmt = self.FORMATS.get(record.levelno)
@@ -43,11 +92,11 @@ class ColorLogFormatter(logging.Formatter):
         return formatter.format(record)
 
 
-def _init_logger(level=logging.INFO):
+def _init_logger(level=logging.INFO, timestamp=False):
     logger = logging.getLogger()
     logger.setLevel(level)
 
-    formatter = ColorLogFormatter()
+    formatter = ColorLogFormatter(with_timestamp=timestamp)
     # create console handler and set level to debug
     ch = logging.StreamHandler()
     ch.setLevel(level)
@@ -80,9 +129,11 @@ class App:
         # TODO [x] refactor to support --with-cn
         # TODO [x] refactor to support --with-block
         # TODO [x] refactor to support --json
-        # TODO [ ] refactor to support input format "Card Name (Set Name)"
-        # TODO [ ] refactor to support input format "Card Name (Set Name) collector-number"
-        # TODO [ ] refactor to support input format "Card Name e:setname cn:number b:block"
+        # TODO [x] refactor to support input format "Card Name (Set Name)"
+        # TODO [x] refactor to support input format "Card Name (Set Name) collector-number"
+        # TODO [x] refactor to support input format "Card Name e:setname cn:number b:block"
+        # TODO [ ] implement download if not in download directory
+        # TODO [x] implement --timestamp to include timestamp in logs
         self.parser = argparse.ArgumentParser(prog="scryfall")
         self.parser.add_argument(
             "-v",
@@ -95,6 +146,17 @@ class App:
             "--server",
             default="https://api.scryfall.com",
             help="The Scryfall server URL.",
+        )
+        self.parser.add_argument(
+            "--cache",
+            default="cache",
+            help="The cache directory for Scryfall data and images.",
+        )
+        self.parser.add_argument(
+            "--timestamp",
+            default=False,
+            help="Include timestamp in log messages.",
+            action="store_true",
         )
         self.parser.add_argument(
             "--dryrun",
@@ -147,10 +209,15 @@ class App:
         self.parser.set_defaults(func=self.default_func)
 
     def default_func(self, args):
-        if args.list:
-            list_cards(args)
-        elif args.download:
+        if not args.list and not args.download:
+            logging.error("You must specify either --list (-l) or --download (-d)")
+            self.parser.print_help()
+            sys.exit(1)
+
+        if args.download:
             download_cards(args)
+        else:
+            list_cards(args)
 
     def parse_args(self, args=None):
         self.args = self.parser.parse_args(args)
@@ -158,7 +225,7 @@ class App:
     def run(self):
         if not self.args:
             self.parse_args()
-        _init_logger(getattr(logging, self.args.verbosity.upper()))
+        _init_logger(getattr(logging, self.args.verbosity.upper()), self.args.timestamp)
         logging.debug(f"command-line args: {self.args}")
         self.args.func(self.args)
 
@@ -167,32 +234,26 @@ def list_cards(args):
     api = Scryfall(args.server)
     query = " ".join(args.cards) if args.cards else ""
     if query:
-        response = api.cards_search(query)
-        if response:
-            logging.info(f'Found {len(response.json()["data"])} cards.')
-            response = response.json()
+        cards = api.cards_search(query)
+        if cards:
+            logging.info(f"Found {len(cards)} cards.")
             if args.json:
-                output = json.dumps(response, indent=2)
+                output = json.dumps([vars(card) for card in cards], indent=2)
             elif args.with_block and args.with_cn and args.with_set:
                 output = "\n".join(
                     [
-                        f"{card['name']} ({card['set']}) {card['collector_number']} {card['set_name']}"
-                        for card in response["data"]
+                        f"{c.name} ({c.block}) {c.collector_number} {c.set_name}"
+                        for c in cards
                     ]
                 )
             elif args.with_block and args.with_cn:
                 output = "\n".join(
-                    [
-                        f"{card['name']} ({card['set']}) {card['collector_number']}"
-                        for card in response["data"]
-                    ]
+                    [f"{c.name} ({c.block}) {c.collector_number}" for c in cards]
                 )
             elif args.with_block:
-                output = "\n".join(
-                    [f"{card['name']} ({card['set']})" for card in response["data"]]
-                )
+                output = "\n".join([f"{c.name} ({c.block})" for c in cards])
             else:
-                output = "\n".join([card["name"] for card in response["data"]])
+                output = "\n".join([c.name for c in cards])
             if args.output and not os.path.isdir(args.output):
                 with open(args.output, "w") as f:
                     f.write(output)
@@ -203,49 +264,58 @@ def list_cards(args):
         logging.error("No query provided for listing cards.")
 
 
+@dataclass
 class Card:
-    def __init__(self, uuid, name, set_name, collector_number, block, is_double_faced):
-        self.uuid = uuid
-        self.name = name
-        self.set_name = set_name
-        self.collector_number = collector_number
-        self.block = block
-        self.is_double_faced = is_double_faced
+    name: str
+    uuid: str = None
+    block: str = None
+    set_name: str = None
+    collector_number: str = None
+    is_double_faced: bool = False
+    quantity: int = 1
+
+
+def parse_card_input(card_input):
+    # Match comments starting with "#" or "//"
+    if card_input.startswith("#") or card_input.startswith("//"):
+        return None
+    # Match formats like "1x Card Name (set code) Set Name" or "10 Card Name (set code)"
+    match = re.match(r"(\d+)?[x\s]?(.+?)(?:\s*\((.+?)\)\s*(.+)?)?$", card_input)
+    if match:
+        quantity, card_name, block, set_name = match.groups()
+        quantity = int(quantity) if quantity else 1
+        card_name = card_name.strip()
+        block = block.strip() if block else None
+        set_name = set_name.strip() if set_name else None
+        return Card(quantity=quantity, name=card_name, block=block, set_name=set_name)
+    return Card(name=card_input.strip())
 
 
 def list_card_names(args, scryfall_api: Scryfall):
+    card_inputs = []
     if args.cards:
-        card_names = args.cards
+        card_inputs = args.cards
     elif args.input:
-        factory = CardParserFactory()
-        parser = factory.create_parser(args.input)
-        logging.debug(f"Using parser {parser.__class__.__name__}")
-        card_names = parser.parse_cards(args.input)
+        with open(args.input) as f:
+            card_inputs = [line.strip() for line in f]
     else:
-        card_names = [line.strip() for line in sys.stdin]
+        card_inputs = [line.strip() for line in sys.stdin]
     cards = []
-    for card_name in card_names:
-        if args.dryrun:
-            dryrun(f"Querying for \"{card_name}\"")
+    for card_input in card_inputs:
+        card = parse_card_input(card_input)
+        if not card:
+            logging.debug(f"Skipping comment line: {card_input}")
             continue
-        response = scryfall_api.cards_named(card_name)
-        if response:
-            response = response.json()
-            is_double_faced = False
-            if "card_faces" in response:
-                is_double_faced = len(response["card_faces"]) > 1
-            card = Card(
-                uuid=response["id"],
-                name=response["name"],
-                set_name=response["set_name"],
-                collector_number=response["collector_number"],
-                block=response["set"],
-                is_double_faced=is_double_faced,
-            )
+        if args.dryrun:
+            dryrun(f"GET {scryfall_api._endpoint_get_url(card.name, set=card.block)}")
             cards.append(card)
-            logging.debug(f"{json.dumps(response)}")
+            continue
+        response = scryfall_api.cards_named(card.name, set=card.block)
+        if response:
+            cards.append(response)
+            logging.debug(f"{json.dumps(vars(response))}")
         else:
-            logging.error(f"Card not found: {card_name}")
+            logging.error(f"Card not found: {card.name}")
             continue
     logging.info(f"Found {len(cards)} cards.")
     return cards
@@ -257,27 +327,41 @@ def slugify(card_name):
 
 
 def download_card(card: Card, filename: str, api: Scryfall, face="front"):
-    result = api.cards_image(card.uuid, face=face)
+    image_data = api.cards_image(card, face=face)
     with open(filename, "wb") as f:
         logging.info(f'Saving "{filename}"')
-        for chunk in result.iter_content(chunk_size=1024):
-            f.write(chunk)
+        f.write(image_data)
 
 
 def download_cards(args):
-    api = Scryfall(args.server)
+    api = Scryfall(server_url=args.server, cache_dir=args.cache)
     if not os.path.exists(args.output):
         os.makedirs(args.output, exist_ok=True)
+
     path_prefix = f"{args.output}/" if args.output else ""
+    downloaded = []
+
     for card in list_card_names(args, api):
+        set_code = f".{card.block.upper()}" if card.block else ""
+        filepath = f"{path_prefix}{slugify(card.name)}{IMAGE_FILENAME_FORMAT['front'].format(set_code)}"
+
         if args.dryrun:
-            dryrun(f"Downloading {card.name}")
+            if os.path.exists(filepath):
+                dryrun(f"Already downloaded: {filepath}")
+            else:
+                dryrun(f"Downloading: {filepath}")
+                downloaded.append(card)
             continue
-        download_card(card, f"{path_prefix}{slugify(card.name)}.png", api)
+
+        download_card(card, filepath, api)
+        downloaded.append(card)
+
         if card.is_double_faced:
-            download_card(
-                card, f"{path_prefix}{slugify(card.name)}_back.png", api, face="back"
-            )
+            filepath = f"{path_prefix}{slugify(card.name)}{IMAGE_FILENAME_FORMAT['back'].format(set_code)}"
+            download_card(card, filepath, api, face="back")
+            downloaded.append(card)
+
+    logging.info(f"Downloaded {len(downloaded)} cards.")
 
 
 def main():

@@ -1,0 +1,167 @@
+# is:fetchland
+Arid Mesa
+Bloodstained Mire
+Flooded Strand
+Marsh Flats
+Misty Rainforest
+Polluted Delta
+Scalding Tarn
+Verdant Catacombs
+Windswept Heath
+Wooded Foothills
+
+# is:bikeland
+Canyon Slough
+Fetid Pools
+Irrigated Farmland
+Scattered Groves
+Sheltered Thicket
+
+# is:fastland
+Blackcave Cliffs
+Blooming Marsh
+Botanical Sanctum
+Concealed Courtyard
+Copperline Gorge
+Darkslick Shores
+Inspiring Vantage
+Razorverge Thicket
+Seachrome Coast
+Spirebluff Canal
+
+# is:dual
+Badlands
+Bayou
+Plateau
+Savannah
+Scrubland
+Taiga
+Tropical Island
+Tundra
+Underground Sea
+Volcanic Island
+
+# is:tangoland
+Canopy Vista
+Cinder Glade
+Prairie Stream
+Smoldering Marsh
+Sunken Hollow
+
+# is:canopyland
+Fiery Islet
+Horizon Canopy
+Nurturing Peatland
+Silent Clearing
+Sunbaked Canyon
+Waterlogged Grove
+
+# is:filterland
+Cascade Bluffs
+Cascading Cataracts
+Crystal Quarry
+Darkwater Catacombs
+Desolate Mire
+Ferrous Lake
+Fetid Heath
+Fire-Lit Thicket
+Flooded Grove
+Graven Cairns
+Mossfire Valley
+Mystic Gate
+Overflowing Basin
+Rugged Prairie
+Shadowblood Ridge
+Skycloud Expanse
+Sungrass Prairie
+Sunken Ruins
+Sunscorched Divide
+Twilight Mire
+Viridescent Bog
+Wooded Bastion
+
+# is:shockland
+Blood Crypt
+Breeding Pool
+Godless Shrine
+Hallowed Fountain
+Overgrown Tomb
+Sacred Foundry
+Steam Vents
+Stomping Ground
+Temple Garden
+Watery Grave
+
+# is:painland
+Adarkar Wastes
+Battlefield Forge
+Brushland
+Caves of Koilos
+Karplusan Forest
+Llanoware Wastes
+Shivan Reef
+Sulfurous Springs
+Underground River
+Yavimaya Coast
+
+# MDFC lands
+Agadeem's Awakening // Agadeem, the Undercrypt
+Akoum Warrior // Akoum Teeth
+Bala Ged Recovery // Bala Ged Sanctuary
+Barkchannel Pathway // Tidechannel Pathway
+Beyeen Veil // Beyeen Coast
+Blackbloom Rogue // Blackbloom Bog
+Blightstep Pathway // Searstep Pathway
+Bloodsoaked Insight // Sanguine Morass
+Boggart Trawler // Boggart Bog
+Branchloft Pathway // Boulderloft Pathway
+Bridgeworks Battle // Tanglespan Bridgeworks
+Brightclimb Pathway // Grimclimb Pathway
+Clearwater Pathway // Murkwater Pathway
+Cragcrown Pathway // Timbercrown Pathway
+Darkbore Pathway // Slitherbore Pathway
+Disciple of Freyalise // Garden of Freyalise
+Drowner of Truth // Drowned Jungle
+Emeria's Call // Emeria, Shattered Skyclave
+Fell the Profane // Fell Mire
+Glasspool Mimic // Glasspool Shore
+Glasswing Grace // Age-Graced Chapel
+Hagra Mauling // Hagra Broodpit
+Hengegate Pathway // Mistgate Pathway
+Hydroelectric Specimen // Hydroelectric Laboratory
+Jwari Disruption // Jwari Ruins
+Kabira Takedown // Kabira Plateau
+Kazandu Mammoth // Kazandu Valley
+Kazuul's Fury // Kazuul's Cliffs
+Khalni Ambush // Khalni Territory
+Legion Leadership // Legion Stronghold
+Makindi Stampede // Makindi Mesas
+Malakir Rebirth // Malakir Mire
+Needleverge Pathway // Pillarverge Pathway
+Ondu Inversion // Ondu Skyruins
+Pelakka Predation // Pelakka Caverns
+Pinnacle Monk // Mystic Peak
+Razorgrass Ambush // Razorgrass Field
+Revitalizing Repast // Old-Growth Grove
+Riverglide Pathway // Lavaglide Pathway
+Rush of Inspiration // Crackling Falls
+Sea Gate Restoration // Sea Gate, Reborn
+Sejiri Shelter // Sejiri Glacier
+Shatterskull Smashing // Shatterskull, the Hammer Pass
+Silundi Vision // Silundi Isle
+Sink into Stupor // Soporific Springs
+Skyclave Cleric // Skyclave Basilica
+Song-Mad Treachery // Song-Mad Ruins
+Spikefield Hazard // Spikefield Cave
+Strength of the Harvest // Haven of the Harvest
+Stump Stomp // Burnwillow Clearing
+Sundering Eruption // Volcanic Fissure
+Suppression Ray // Orderly Plaza
+Tangled Florahedron // Tangled Vale
+Turntimber Symbiosis // Turntimber, Serpentine Wood
+Umara Wizard // Umara Skyfalls
+Valakut Awakening // Valakut Stoneforge
+Vastwood Fortification // Vastwood Thicket
+Waterlogged Teachings // Inundated Archive
+Witch Enchanter // Witch-Blessed Meadow
+Zof Consumption // Zof Bloodbog

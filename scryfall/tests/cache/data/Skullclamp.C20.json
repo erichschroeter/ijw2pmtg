@@ -1,0 +1,119 @@
+{
+    "object": "card",
+    "id": "8854e9a7-a799-47d0-8662-95aa527d3210",
+    "oracle_id": "65986c1b-8e51-4604-b685-d82fa7d1263a",
+    "multiverse_ids": [
+        482879
+    ],
+    "tcgplayer_id": 212351,
+    "cardmarket_id": 454348,
+    "name": "Skullclamp",
+    "lang": "en",
+    "released_at": "2020-04-17",
+    "uri": "https://api.scryfall.com/cards/8854e9a7-a799-47d0-8662-95aa527d3210",
+    "scryfall_uri": "https://scryfall.com/card/c20/251/skullclamp?utm_source=api",
+    "layout": "normal",
+    "highres_image": true,
+    "image_status": "highres_scan",
+    "image_uris": {
+        "small": "https://cards.scryfall.io/small/front/8/8/8854e9a7-a799-47d0-8662-95aa527d3210.jpg?1591321716",
+        "normal": "https://cards.scryfall.io/normal/front/8/8/8854e9a7-a799-47d0-8662-95aa527d3210.jpg?1591321716",
+        "large": "https://cards.scryfall.io/large/front/8/8/8854e9a7-a799-47d0-8662-95aa527d3210.jpg?1591321716",
+        "png": "https://cards.scryfall.io/png/front/8/8/8854e9a7-a799-47d0-8662-95aa527d3210.png?1591321716",
+        "art_crop": "https://cards.scryfall.io/art_crop/front/8/8/8854e9a7-a799-47d0-8662-95aa527d3210.jpg?1591321716",
+        "border_crop": "https://cards.scryfall.io/border_crop/front/8/8/8854e9a7-a799-47d0-8662-95aa527d3210.jpg?1591321716"
+    },
+    "mana_cost": "{1}",
+    "cmc": 1.0,
+    "type_line": "Artifact \u2014 Equipment",
+    "oracle_text": "Equipped creature gets +1/-1.\nWhenever equipped creature dies, draw two cards.\nEquip {1}",
+    "colors": [],
+    "color_identity": [],
+    "keywords": [
+        "Equip"
+    ],
+    "legalities": {
+        "standard": "not_legal",
+        "future": "not_legal",
+        "historic": "not_legal",
+        "timeless": "not_legal",
+        "gladiator": "not_legal",
+        "pioneer": "not_legal",
+        "explorer": "not_legal",
+        "modern": "banned",
+        "legacy": "banned",
+        "pauper": "not_legal",
+        "vintage": "legal",
+        "penny": "not_legal",
+        "commander": "legal",
+        "oathbreaker": "legal",
+        "standardbrawl": "not_legal",
+        "brawl": "not_legal",
+        "alchemy": "not_legal",
+        "paupercommander": "not_legal",
+        "duel": "legal",
+        "oldschool": "not_legal",
+        "premodern": "not_legal",
+        "predh": "legal"
+    },
+    "games": [
+        "paper",
+        "mtgo"
+    ],
+    "reserved": false,
+    "game_changer": false,
+    "foil": false,
+    "nonfoil": true,
+    "finishes": [
+        "nonfoil"
+    ],
+    "oversized": false,
+    "promo": false,
+    "reprint": true,
+    "variation": false,
+    "set_id": "f60ec786-1f8d-42f7-9abc-0d880fe243f6",
+    "set": "c20",
+    "set_name": "Commander 2020",
+    "set_type": "commander",
+    "set_uri": "https://api.scryfall.com/sets/f60ec786-1f8d-42f7-9abc-0d880fe243f6",
+    "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ac20&unique=prints",
+    "scryfall_set_uri": "https://scryfall.com/sets/c20?utm_source=api",
+    "rulings_uri": "https://api.scryfall.com/cards/8854e9a7-a799-47d0-8662-95aa527d3210/rulings",
+    "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A65986c1b-8e51-4604-b685-d82fa7d1263a&unique=prints",
+    "collector_number": "251",
+    "digital": false,
+    "rarity": "uncommon",
+    "flavor_text": "The mind is a beautiful bounty encased in an annoying bone container.",
+    "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+    "artist": "Daniel Ljunggren",
+    "artist_ids": [
+        "0fbd4798-76eb-46d5-a5d4-1e3a25870e34"
+    ],
+    "illustration_id": "679c0fda-95b3-46e9-9c39-0dcc572cc73b",
+    "border_color": "black",
+    "frame": "2015",
+    "full_art": false,
+    "textless": false,
+    "booster": false,
+    "story_spotlight": false,
+    "edhrec_rank": 39,
+    "prices": {
+        "usd": "7.60",
+        "usd_foil": null,
+        "usd_etched": null,
+        "eur": "6.25",
+        "eur_foil": null,
+        "tix": null
+    },
+    "related_uris": {
+        "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=482879&printed=false",
+        "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=infinite&u=https%3A%2F%2Finfinite.tcgplayer.com%2Fsearch%3FcontentMode%3Darticle%26game%3Dmagic%26q%3DSkullclamp",
+        "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=infinite&u=https%3A%2F%2Finfinite.tcgplayer.com%2Fsearch%3FcontentMode%3Ddeck%26game%3Dmagic%26q%3DSkullclamp",
+        "edhrec": "https://edhrec.com/route/?cc=Skullclamp"
+    },
+    "purchase_uris": {
+        "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F212351%3Fpage%3D1",
+        "cardmarket": "https://www.cardmarket.com/en/Magic/Products/Singles/Commander-Ikoria/Skullclamp?referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+        "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Skullclamp&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+    }
+}

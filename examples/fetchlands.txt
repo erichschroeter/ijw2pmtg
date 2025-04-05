@@ -1,0 +1,11 @@
+# is:fetchland
+Arid Mesa
+Bloodstained Mire
+Flooded Strand
+Marsh Flats
+Misty Rainforest
+Polluted Delta
+Scalding Tarn
+Verdant Catacombs
+Windswept Heath
+Wooded Foothills
