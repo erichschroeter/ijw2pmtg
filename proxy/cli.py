@@ -3,13 +3,13 @@ import logging
 import os
 from PIL import Image, ImageOps
 
-#region Command line parsing  # noqa
+# region Command line parsing  # noqa
 
 
 class ColorLogFormatter(logging.Formatter):
-    '''
+    """
     Custom formatter that changes the color of logs based on the log level.
-    '''
+    """
 
     grey = "\x1b[38;20m"
     green = "\u001b[32m"
@@ -20,17 +20,62 @@ class ColorLogFormatter(logging.Formatter):
     cyan = "\u001b[36m"
     reset = "\x1b[0m"
 
-    timestamp = '%(asctime)s - '
-    loglevel = '%(levelname)s'
-    message = ' - %(message)s'
+    timestamp = "%(asctime)s - "
+    loglevel = "%(levelname)s"
+    message = " - %(message)s"
 
-    FORMATS = {
-        logging.DEBUG:    timestamp + blue + loglevel + reset + message,
-        logging.INFO:     timestamp + green + loglevel + reset + message,
-        logging.WARNING:  timestamp + yellow + loglevel + reset + message,
-        logging.ERROR:    timestamp + red + loglevel + reset + message,
-        logging.CRITICAL: timestamp + bold_red + loglevel + reset + message
-    }
+    def __init__(self, with_timestamp=False):
+        super().__init__()
+        if with_timestamp:
+            self.FORMATS = {
+                logging.DEBUG: (
+                    self.timestamp
+                    + self.blue
+                    + self.loglevel
+                    + self.reset
+                    + self.message
+                ),
+                logging.INFO: (
+                    self.timestamp
+                    + self.green
+                    + self.loglevel
+                    + self.reset
+                    + self.message
+                ),
+                logging.WARNING: (
+                    self.timestamp
+                    + self.yellow
+                    + self.loglevel
+                    + self.reset
+                    + self.message
+                ),
+                logging.ERROR: (
+                    self.timestamp
+                    + self.red
+                    + self.loglevel
+                    + self.reset
+                    + self.message
+                ),
+                logging.CRITICAL: (
+                    self.timestamp
+                    + self.bold_red
+                    + self.loglevel
+                    + self.reset
+                    + self.message
+                ),
+            }
+        else:
+            self.FORMATS = {
+                logging.DEBUG: (self.blue + self.loglevel + self.reset + self.message),
+                logging.INFO: (self.green + self.loglevel + self.reset + self.message),
+                logging.WARNING: (
+                    self.yellow + self.loglevel + self.reset + self.message
+                ),
+                logging.ERROR: (self.red + self.loglevel + self.reset + self.message),
+                logging.CRITICAL: (
+                    self.bold_red + self.loglevel + self.reset + self.message
+                ),
+            }
 
     def format(self, record):
         log_fmt = self.FORMATS.get(record.levelno)
@@ -38,11 +83,11 @@ class ColorLogFormatter(logging.Formatter):
         return formatter.format(record)
 
 
-def _init_logger(level=logging.INFO):
+def _init_logger(level=logging.INFO, timestamp=False):
     logger = logging.getLogger()
     logger.setLevel(level)
 
-    formatter = ColorLogFormatter()
+    formatter = ColorLogFormatter(with_timestamp=timestamp)
     # create console handler and set level to debug
     ch = logging.StreamHandler()
     ch.setLevel(level)
@@ -50,41 +95,91 @@ def _init_logger(level=logging.INFO):
     logger.addHandler(ch)
 
 
-class RawTextArgumentDefaultsHelpFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawTextHelpFormatter):
+class RawTextArgumentDefaultsHelpFormatter(
+    argparse.ArgumentDefaultsHelpFormatter, argparse.RawTextHelpFormatter
+):
     pass
 
 
-#endregion Command line parsing  # noqa
+# endregion Command line parsing  # noqa
+
 
 class App:
     def __init__(self) -> None:
         self.args = None
-        self.parser = argparse.ArgumentParser(prog='proxy')
-        self.parser.add_argument('-v', '--verbosity',
-                                 choices=['critical', 'error', 'warning', 'info', 'debug'],
-                                 default='info',
-                                 help='Set the logging verbosity level.')
-        self.parser.add_argument('--dryrun', default=False, help='Dry run network and filesystem operations.', action='store_true')
-        self.parser.add_argument('-i', '--input',
-                                 help='A file of card names. Alternatively, a newline-separated list of card names can be provided via stdin.')
-        self.parser.add_argument('-o', '--output', default=os.getcwd(), help='The output directory.')
-        self.subparsers = self.parser.add_subparsers(dest='command', title='Commands')
+        self.parser = argparse.ArgumentParser(prog="proxy")
+        self.parser.add_argument(
+            "-v",
+            "--verbosity",
+            choices=["critical", "error", "warning", "info", "debug"],
+            default="info",
+            help="Set the logging verbosity level.",
+        )
+        self.parser.add_argument(
+            "--dryrun",
+            default=False,
+            help="Dry run network and filesystem operations.",
+            action="store_true",
+        )
+        self.parser.add_argument(
+            "-i",
+            "--input",
+            help="A file of card names. Alternatively, a newline-separated list of card names can be provided via stdin.",
+        )
+        self.parser.add_argument(
+            "-o", "--output", default=os.getcwd(), help="The output directory."
+        )
+        self.subparsers = self.parser.add_subparsers(dest="command", title="Commands")
 
-        resize_parser = self.subparsers.add_parser('resize', help='Resize images to a specific size.')
-        resize_parser.add_argument('images', nargs='*', help='The images to resize.')
-        resize_parser.add_argument('-s', '--size', default='745x1040', help='The width and height of the resized images.')
+        resize_parser = self.subparsers.add_parser(
+            "resize", help="Resize images to a specific size."
+        )
+        resize_parser.add_argument("images", nargs="*", help="The images to resize.")
+        resize_parser.add_argument(
+            "-s",
+            "--size",
+            default="745x1040",
+            help="The width and height of the resized images.",
+        )
         resize_parser.set_defaults(func=resize_images)
 
-        rotate_parser = self.subparsers.add_parser('rotate', help='Rotate images to a specific angle.')
-        rotate_parser.add_argument('images', nargs='*', help='The images to rotate.')
-        rotate_parser.add_argument('-a', '--angle', default=90.0, type=float, choices=[Range(0.0, 360.0)], help='The angle to rotate the images.')
+        rotate_parser = self.subparsers.add_parser(
+            "rotate", help="Rotate images to a specific angle."
+        )
+        rotate_parser.add_argument("images", nargs="*", help="The images to rotate.")
+        rotate_parser.add_argument(
+            "-a",
+            "--angle",
+            default=90.0,
+            type=float,
+            choices=[Range(0.0, 360.0)],
+            help="The angle to rotate the images.",
+        )
         rotate_parser.set_defaults(func=rotate_images)
 
-        stitch_parser = self.subparsers.add_parser('stitch', help='Stitch images together.')
-        stitch_parser.add_argument('images', nargs='*', help='The images to stitch together.')
-        stitch_parser.add_argument('-x', '--width', default=1, type=int, help='The number of images to stitch together horizontally.')
-        stitch_parser.add_argument('-y', '--height', default=1, type=int, help='The number of images to stitch together vertically.')
-        stitch_parser.add_argument('-o', '--output', default=os.getcwd(), help='The output directory.')
+        stitch_parser = self.subparsers.add_parser(
+            "stitch", help="Stitch images together."
+        )
+        stitch_parser.add_argument(
+            "images", nargs="*", help="The images to stitch together."
+        )
+        stitch_parser.add_argument(
+            "-x",
+            "--width",
+            default=1,
+            type=int,
+            help="The number of images to stitch together horizontally.",
+        )
+        stitch_parser.add_argument(
+            "-y",
+            "--height",
+            default=1,
+            type=int,
+            help="The number of images to stitch together vertically.",
+        )
+        stitch_parser.add_argument(
+            "-o", "--output", default=os.getcwd(), help="The output directory."
+        )
         stitch_parser.set_defaults(func=stitch_images)
 
     def parse_args(self, args=None):
@@ -94,7 +189,7 @@ class App:
         if not self.args:
             self.parse_args()
         _init_logger(getattr(logging, self.args.verbosity.upper()))
-        logging.debug(f'command-line args: {self.args}')
+        logging.debug(f"command-line args: {self.args}")
         self.args.func(self.args)
 
 
@@ -105,15 +200,15 @@ class Range:
 
     def __eq__(self, other: object) -> bool:
         return self.min <= other <= other.max
-    
+
     def __repr__(self) -> str:
-        return f'[{self.min}, {self.max}]'
+        return f"[{self.min}, {self.max}]"
 
 
 def arrange_images(images, width=1, height=1):
     card_pixel_width = 1040
     card_pixel_height = 745
-    grid = Image.new('RGBA', (width * card_pixel_width, height * card_pixel_height))
+    grid = Image.new("RGBA", (width * card_pixel_width, height * card_pixel_height))
     image_data = []
     for i, image in enumerate(images):
         img = Image.open(image)
@@ -129,49 +224,66 @@ def stitch_images(args, cards=None, page_count=0):
     if not os.path.exists(args.output):
         os.makedirs(args.output, exist_ok=True)
     import math
+
     max_page_count = math.ceil(len(cards) / (args.width * args.height))
-    logging.info(f'Arranging {len(cards)} images on page {page_count+1} of {max_page_count} pages of {args.width}x{args.height}')
+    logging.info(
+        f"Arranging {len(cards)} images on page {page_count+1} of {max_page_count} pages of {args.width}x{args.height}"
+    )
 
     cards_per_page = args.width * args.height
 
     if len(cards) >= cards_per_page:
         # If there are enough images to fill a page, create the page and recurse with the remaining images
         page = arrange_images(cards[:cards_per_page], args.width, args.height)
-        grid_filename = os.path.join(args.output, f'grid_{args.width}x{args.height}_{page_count+1}.png')
+        grid_filename = os.path.join(
+            args.output, f"grid_{args.width}x{args.height}_{page_count+1}.png"
+        )
         page.save(grid_filename)
         stitch_images(args, cards[cards_per_page:], page_count + 1)
     elif cards:
         # If there are any leftover images, create a final page with them
         page = arrange_images(cards, args.width, args.height)
-        grid_filename = os.path.join(args.output, f'grid_{args.width}x{args.height}_{page_count+1}.png')
+        grid_filename = os.path.join(
+            args.output, f"grid_{args.width}x{args.height}_{page_count+1}.png"
+        )
         page.save(grid_filename)
 
+
 def stitch_images(args):
-    IMG_FILENAME_PREFIX = '_grid'
+    IMG_FILENAME_PREFIX = "_grid"
     if not os.path.exists(args.output):
         os.makedirs(args.output, exist_ok=True)
     import math
+
     max_page_count = math.ceil(len(args.images) / (args.width * args.height))
-    logging.info(f'Arranging {len(args.images)} images on {max_page_count} pages of {args.width}x{args.height}')
+    logging.info(
+        f"Arranging {len(args.images)} images on {max_page_count} pages of {args.width}x{args.height}"
+    )
     cards_per_page = args.width * args.height
     cards = []
     page_count = 0
     for img in args.images:
         cards.append(img)
         if len(cards) >= cards_per_page:
-            logging.info(f'Arranging {len(cards)} images as {args.width}x{args.height}')
-            logging.debug(f'Arranging images: {cards}')
+            logging.info(f"Arranging {len(cards)} images as {args.width}x{args.height}")
+            logging.debug(f"Arranging images: {cards}")
             page = arrange_images(cards, args.width, args.height)
             page_count += 1
-            grid_filename = os.path.join(args.output, f'{IMG_FILENAME_PREFIX}{args.width}x{args.height}_{page_count}.png')
+            grid_filename = os.path.join(
+                args.output,
+                f"{IMG_FILENAME_PREFIX}{args.width}x{args.height}_{page_count}.png",
+            )
             page.save(grid_filename)
             cards = []
     if cards:  # If there are any cards left over, make a final page
-        logging.info(f'Arranging {len(cards)} images as {args.width}x{args.height}')
-        logging.debug(f'Arranging images: {cards}')
+        logging.info(f"Arranging {len(cards)} images as {args.width}x{args.height}")
+        logging.debug(f"Arranging images: {cards}")
         page = arrange_images(cards, args.width, args.height)
         page_count += 1
-        grid_filename = os.path.join(args.output, f'{IMG_FILENAME_PREFIX}{args.width}x{args.height}_{page_count}.png')
+        grid_filename = os.path.join(
+            args.output,
+            f"{IMG_FILENAME_PREFIX}{args.width}x{args.height}_{page_count}.png",
+        )
         page.save(grid_filename)
 
 
@@ -188,11 +300,11 @@ def rotate_images(args):
 
 
 def resize_image(image, size=(745, 1040)):
-    '''
+    """
     Keword arguments:
     size -- width x height (e.g. (745, 1040)
-    '''
-    logging.debug(f'Resizing {image} to {size}')
+    """
+    logging.debug(f"Resizing {image} to {size}")
     with Image.open(image) as img:
         image = ImageOps.contain(img, size).save()
     return image
@@ -207,5 +319,5 @@ def main():
     App().run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
