@@ -6,7 +6,7 @@
     "python.testing.unittestArgs": [
         "-v",
         "-s",
-        ".",
+        "${workspaceFolder}",
         "-p",
         "test_*.py"
     ],

@@ -182,6 +182,33 @@ class App:
         )
         stitch_parser.set_defaults(func=stitch_images)
 
+        redact_parser = self.subparsers.add_parser(
+            "redact",
+            help="Replace sections of images with black rectangles or other images.",
+        )
+        redact_parser.add_argument("images", nargs="*", help="The images to redact.")
+        redact_parser.add_argument(
+            "-s",
+            "--size",
+            default="745x1040",
+            help="The width and height to normalize images to before redacting.",
+        )
+        redact_parser.add_argument(
+            "-r",
+            "--region",
+            action="append",
+            required=True,
+            help="Region to redact in format 'x,y,width,height'. Use multiple -r flags for multiple regions.",
+            dest="regions",
+        )
+        redact_parser.add_argument(
+            "-i",
+            "--replacement-images",
+            nargs="*",
+            help="Optional images to use instead of black rectangles. Must match number of regions.",
+        )
+        redact_parser.set_defaults(func=redact_images)
+
     def parse_args(self, args=None):
         self.args = self.parser.parse_args(args)
 
@@ -313,6 +340,53 @@ def resize_image(image, size=(745, 1040)):
 def resize_images(args):
     for img in args.images:
         resize_image(img, args.size)
+
+
+def redact_images(args):
+    # Parse size
+    width, height = map(int, args.size.split("x"))
+
+    # Parse regions
+    regions = []
+    for region in args.regions:
+        try:
+            x, y, w, h = map(int, region.split(","))
+            regions.append((x, y, w, h))
+        except ValueError:
+            logging.error(
+                f"Invalid region format: {region}. Expected 'x,y,width,height'"
+            )
+            return
+
+    # Validate replacement images if provided
+    replacements = []
+    if args.replacement_images:
+        if len(args.replacement_images) != len(regions):
+            raise ValueError(
+                "Number of replacement images must match number of regions"
+            )
+        for img_path in args.replacement_images:
+            with Image.open(img_path) as img:
+                replacements.append(img.copy())
+
+    for img_path in args.images:
+        logging.info(f'Redacting regions in "{img_path}"')
+        with Image.open(img_path) as img:
+            # Resize to standard size
+            img = ImageOps.contain(img, (width, height))
+
+            # Process each region
+            for i, (x, y, w, h) in enumerate(regions):
+                if replacements and i < len(replacements):
+                    # Resize replacement image to fit region
+                    replacement = replacements[i].resize((w, h))
+                    img.paste(replacement, (x, y))
+                else:
+                    # Create black rectangle
+                    black_rect = Image.new("RGBA", (w, h), (0, 0, 0, 255))
+                    img.paste(black_rect, (x, y))
+
+            img.save(img_path)
 
 
 def main():

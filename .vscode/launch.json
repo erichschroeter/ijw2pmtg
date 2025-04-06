@@ -8,6 +8,25 @@
             "name": "Python Debugger: Module",
             "type": "debugpy",
             "request": "launch",
+            "module": "proxy",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "redact",
+                "-r",
+                "100,100,100,100",
+                "-r",
+                "200,200,200,200",
+                "${workspaceFolder}/proxies/Canyon Slough.TDC.png",
+            ],
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python Debugger: Module",
+            "type": "debugpy",
+            "request": "launch",
             "module": "scryfall",
             "cwd": "${workspaceFolder}",
             "args": [
